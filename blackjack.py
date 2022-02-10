@@ -15,7 +15,12 @@ class Card():
         self.rank=rank
         self.suit=suit
         self.value=values[rank]
+        # mask attribute to hide dealer's first card
         self.mask=False
+        # is_ace attribute to adjust for aces
+        self.is_ace=False
+        if self.value==11:
+            self.is_ace=True
     
     def __str__(self):
         if self.mask:
@@ -59,16 +64,26 @@ class Player():
         else:
             return False
     
-    def add_card(self,added_card):
-        '''Appends added_card to the Player's hand'''
-        self.hand.append(added_card)
-    
     def total_value(self):
         '''Returns the total value of the player's hand'''
         tot_value=0
         for x in self.hand:
             tot_value+=x.value
         return tot_value
+
+    def adjust_for_aces(self):
+        '''If Player has busted, checks if the hand contains any aces and adjusts them'''
+        if self.total_value() >= 21:
+            for n in range(len(self.hand)):
+                if self.hand[n].is_ace:
+                    self.hand[n].value=1
+                    # We don't want ALL aces' values to be turned to ones
+                    break 
+    
+    def add_card(self,added_card):
+        '''Appends added_card to the Player's hand'''
+        self.hand.append(added_card)
+        self.adjust_for_aces()
         
     def __str__(self):
         return f"{self.name} has {self.bankroll} amount of money right now."
@@ -79,10 +94,6 @@ class Dealer():
     def __init__(self,name=choice(dealer_names)):
         self.name=name
         self.hand=[]
-        
-    def add_card(self,added_card):
-        '''Appends added_card to the Dealer's hand'''
-        self.hand.append(added_card)
 
     def total_value(self):
         '''Returns the total value of the dealer's hand'''
@@ -90,6 +101,27 @@ class Dealer():
         for x in self.hand:
             tot_value+=x.value
         return tot_value
+
+    def adjust_for_aces(self):
+        '''If Dealer has busted, checks if the hand contains any aces and adjusts them'''
+        if self.total_value() >= 21:
+            for n in range(len(self.hand)):
+                if self.hand[n].is_ace:
+                    self.hand[n].value=1
+                    # We don't want ALL aces' values to be turned to ones
+                    break 
+    
+    def add_card(self,added_card):
+        '''Appends added_card to the Dealer's hand and adjusts for aces.'''
+        self.hand.append(added_card)
+        self.adjust_for_aces()
+    
+    def final_display_cards(self):
+        '''Function to display cards at the end of each round and to remove the mask on the first card of the dealer's hand'''
+        print(f"Dealer, {dealer.name}'s cards:")
+        self.hand[0].mask=False
+        for x in dealer.hand:
+            print(x)
 
 # Functions Definitions
 def check_bust(n,hand=[]):
@@ -173,6 +205,10 @@ while game_on:
         else:
             print(f"Player, {player1.name} Busted!")
             print(f"Dealer {dealer.name} wins!")
+            print(f"Dealer, {dealer.name}'s cards:")
+            dealer.hand[0].mask=False
+            for x in dealer.hand:
+                print(x)
             player1.bankroll-=player1.bet
             print(f"Player, {player1.name}'s bet of $ {player1.bet} has been lost.")
             print(f"Player, {player1.name} now has $ {player1.bankroll} left")
@@ -209,6 +245,7 @@ while game_on:
         
         if both_bust or both_not_bust:
             if player1.total_value()>dealer.total_value():
+                dealer.final_display_cards()
                 print(f"Player {player1.name} wins!")
                 player1.bankroll+=player1.bet
                 print(f"Player, {player1.name}'s bet of $ {player1.bet} has been won!")
@@ -221,11 +258,13 @@ while game_on:
                             break
                         elif choice.upper()=='N':
                             game_on=False
+                            print("Thanks for playing! Goodbye!")
                             break
                     except:
                         print("Incorrect Input, Please Try Again.")
                 break
             elif player1.total_value()<dealer.total_value():
+                dealer.final_display_cards()
                 print(f"Dealer {dealer.name} wins!")
                 player1.bankroll-=player1.bet
                 print(f"Player, {player1.name}'s bet of $ {player1.bet} has been lost.")
@@ -238,6 +277,7 @@ while game_on:
                             break
                         elif choice.upper()=='N':
                             game_on=False
+                            print("Thanks for playing! Goodbye!")
                             break
                     except:
                         print("Incorrect Input, Please Try Again.")
@@ -252,11 +292,13 @@ while game_on:
                             break
                         elif choice.upper()=='N':
                             game_on=False
+                            print("Thanks for playing! Goodbye!")
                             break
                     except:
                         print("Incorrect Input, Please Try Again.")
                 break
         elif check_bust(21,player1.hand):
+            dealer.final_display_cards()
             print(f"{player1.name} busted!")
             print(f"Dealer {dealer.name} wins!")
             player1.bankroll-=player1.bet
@@ -270,11 +312,13 @@ while game_on:
                         break
                     elif choice.upper()=='N':
                         game_on=False
+                        print("Thanks for playing! Goodbye!")
                         break
                 except:
                     print("Incorrect Input, Please Try Again.")
             break
         elif check_bust(21,dealer.hand):
+            dealer.final_display_cards()
             print(f"{dealer.name} busted!")
             print(f"Player {player1.name} wins!")
             player1.bankroll+=player1.bet
@@ -288,11 +332,13 @@ while game_on:
                         break
                     elif choice.upper()=='N':
                         game_on=False
+                        print("Thanks for playing! Goodbye!")
                         break
                 except:
                     print("Incorrect Input, Please Try Again.")
             break
 
+# Game End
 
 
 
